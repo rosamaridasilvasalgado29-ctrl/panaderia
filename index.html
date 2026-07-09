@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panadería - Pedidos</title>
+<style>
+  :root{
+    --brown:#6b4226; --brown-dark:#4a2c17; --cream:#fdf6ec; --cream2:#f6ead9;
+    --accent:#c97b3d; --accent-dark:#a85f26; --green:#4c7a4c; --red:#b34a4a; --gray:#8a8178;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--cream);color:var(--brown-dark);}
+  header{background:var(--brown);color:#fff;padding:14px 16px;text-align:center;position:sticky;top:0;z-index:10;}
+  header h1{margin:0;font-size:1.15rem;font-weight:600;letter-spacing:.3px;}
+  header .sub{font-size:.75rem;opacity:.85;margin-top:2px;}
+  .container{max-width:640px;margin:0 auto;padding:12px 12px 80px;}
+  .card{background:#fff;border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.06);border:1px solid #eee0cc;}
+  input[type=text]{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:1rem;}
+  .btn{display:inline-block;padding:12px 18px;border:none;border-radius:10px;background:var(--accent);color:#fff;font-size:1rem;font-weight:600;cursor:pointer;}
+  .btn:active{background:var(--accent-dark);}
+  .btn.secondary{background:var(--cream2);color:var(--brown-dark);}
+  .btn.danger{background:var(--red);}
+  .btn.small{padding:6px 10px;font-size:.8rem;border-radius:8px;}
+  .btn-block{width:100%;}
+  .label{font-size:.8rem;color:var(--gray);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;display:block;}
+  .msg{padding:10px 12px;border-radius:10px;margin-bottom:12px;font-size:.9rem;}
+  .msg.ok{background:#e3f0e3;color:var(--green);}
+  .msg.err{background:#f5e0e0;color:var(--red);}
+  .chip{display:inline-block;padding:4px 9px;border-radius:14px;background:var(--cream2);font-size:.75rem;margin:2px 3px 2px 0;}
+  .days-select{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0;}
+  .day-chip{padding:6px 10px;border-radius:8px;border:1px solid var(--accent);font-size:.8rem;cursor:pointer;background:#fff;color:var(--accent-dark);}
+  .day-chip.sel{background:var(--accent);color:#fff;}
+  h2.section-title{font-size:1rem;color:var(--brown);margin:0 0 10px;}
+  .client-item{padding:10px;border-radius:10px;background:var(--cream2);margin-bottom:6px;cursor:pointer;font-size:.9rem;font-weight:600;}
+  .order-line{font-size:.85rem;color:var(--gray);margin-top:2px;}
+  .total-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f0e6d6;font-size:.95rem;}
+  .total-row b{color:var(--accent-dark);}
+  .footer-link{text-align:center;margin-top:20px;font-size:.75rem;color:var(--gray);}
+  .badge{font-size:.7rem;padding:2px 7px;border-radius:10px;background:var(--brown);color:#fff;margin-left:6px;}
+  .flexrow{display:flex;gap:8px;}
+  .flexrow>*{flex:1;}
+  .small-note{font-size:.75rem;color:var(--gray);margin-top:4px;}
+  .topbar{display:flex;gap:6px;margin-bottom:8px;}
+  .topbar-btn{flex:1;padding:12px 6px;border-radius:12px;background:#fff;border:2px solid var(--brown);color:var(--brown);font-weight:700;font-size:.85rem;cursor:pointer;}
+  .topbar-btn.active{background:var(--brown);color:#fff;}
+  .subtabs{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;}
+  .subtab-btn{flex:0 0 auto;padding:7px 12px;border-radius:20px;border:1px solid var(--accent);background:#fff;color:var(--accent-dark);font-size:.8rem;font-weight:600;cursor:pointer;white-space:nowrap;}
+  .subtab-btn.active{background:var(--accent);color:#fff;}
+  .settings-link{text-align:right;font-size:.75rem;color:var(--gray);text-decoration:underline;cursor:pointer;margin-bottom:10px;}
+  .cat-header{padding:9px 14px;color:#fff;font-weight:700;font-size:.85rem;border-radius:9px 9px 0 0;margin-top:16px;letter-spacing:.3px;}
+  .cat-grid{display:grid;grid-template-columns:1fr 1fr;border:1px solid #eee0cc;border-top:none;border-radius:0 0 9px 9px;overflow:hidden;}
+  .cat-cell{padding:8px 8px;border-bottom:1px solid #f0e6d6;border-right:1px solid #f0e6d6;}
+  .cat-cell:nth-child(2n){border-right:none;}
+  .cat-cell .cname{font-size:.78rem;font-weight:600;margin-bottom:5px;line-height:1.15;min-height:2.2em;}
+  .qty-controls{display:flex;align-items:center;gap:5px;}
+  .qty-btn{width:28px;height:28px;border-radius:50%;border:none;background:var(--cream2);color:var(--brown);font-size:1rem;font-weight:700;cursor:pointer;flex:0 0 auto;}
+  .qty-btn:active{background:var(--accent);color:#fff;}
+  .qty-input{width:40px;text-align:center;border:1px solid #ddd;border-radius:8px;padding:5px 2px;font-size:.9rem;}
+  .config-warning{background:#f5e0e0;color:var(--red);padding:14px;border-radius:12px;font-size:.9rem;margin-bottom:12px;}
+  .loading-dot{opacity:.6;font-size:.8rem;}
+</style>
+</head>
+<body>
+<header>
+  <h1 id="headerTitle">Panadería</h1>
+  <div class="sub" id="headerSub">Haz tu pedido</div>
+</header>
+<div class="container" id="app">Cargando...</div>
+
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbx7lAMBUWFrFBEINx8MWkVm4KZ4gEL2AZNuR1wzj2qvMiyuYaw02roFnnl7umev1IQvbg/exec";
+
+const PIN = "1234";
+const PRODUCTS_KEY = "products";
+const SYSTEM_KEY = "system:state";
+const ORDER_PREFIX = "order:";
+const HISTORY_PREFIX = "history:";
+const FIXEDWEEK_PREFIX = "fixedweek:";
+const FIXEDWEEKEND_PREFIX = "fixedweekend:";
+const DAY_NAMES = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
+const WEEK_DAYS = ["Lun","Mar","Mié","Jue","Vie"];
+
+const CATEGORY_ORDER = ["Masa Dura","Masa Viena","Moreno","Integral","Multicereal"];
+const CATEGORY_COLORS = {
+  "Masa Dura":"#6b4226","Masa Viena":"#2f6d4f","Moreno":"#3a2a1c","Integral":"#3f7d3f","Multicereal":"#5b3f8f"
+};
+
+const DEFAULT_CATALOG = [
+  ["Kilos Blancos","Masa Dura"],["Kilos Blancos Cortado","Masa Dura"],
+  ["Medios Blancos","Masa Dura"],["Medios Blancos Cortado","Masa Dura"],
+  ["Cuartos Blancos","Masa Dura"],["Cuartos Blancos Cortado","Masa Dura"],
+  ["Kilos Boba","Masa Dura"],["Kilos Boba Cortado","Masa Dura"],
+  ["Medios Boba","Masa Dura"],["Medios Boba Cortado","Masa Dura"],
+  ["Cuartos Boba","Masa Dura"],["Cuartos Boba Cortado","Masa Dura"],
+  ["Medios Piña","Masa Dura"],["Medios Tabla","Masa Dura"],
+  ["Cuartos Piña","Masa Dura"],["Cuartos Tabla","Masa Dura"],
+  ["Bollos Masa Dura","Masa Dura"],["Bollos Piña","Masa Dura"],
+  ["Bollitos Masa Dura","Masa Dura"],["Bollitos Piña","Masa Dura"],
+  ["Molde Blanco","Masa Dura"],
+  ["Barras","Masa Viena"],["Barras de Piña","Masa Viena"],["Barra Manteca","Masa Viena"],
+  ["Barras Rústica","Masa Viena"],["Medias Barritas","Masa Viena"],
+  ["Medias Barritas Rústica","Masa Viena"],["Kilos Rústico","Masa Viena"],
+  ["Medios Rústico","Masa Viena"],["Cuartos Rústico","Masa Viena"],
+  ["Bollitos Rústico","Masa Viena"],["Molletes Rústico","Masa Viena"],
+  ["Bollos Viena","Masa Viena"],["Mini Cocido","Masa Viena"],
+  ["Pitufos","Masa Viena"],["Salchichas","Masa Viena"],
+  ["Mini Blanco","Masa Viena"],["Molletes Blancos","Masa Viena"],
+  ["Molletes Cocidos","Masa Viena"],["Terraza Blanco","Masa Viena"],
+  ["Montadito","Masa Viena"],["Montadito Redondo","Masa Viena"],
+  ["Hamburguesa","Masa Viena"],["Estrellitas","Masa Viena"],
+  ["Moldes Blanco","Masa Viena"],
+  ["Telera 3 Kilos Moreno","Moreno"],["Telera 3 Kilos Moreno Cortado","Moreno"],
+  ["Telera 2 Kilos Moreno","Moreno"],["Telera 2 Kilos Moreno Cortado","Moreno"],
+  ["Kilos Morenos","Moreno"],["Kilos Morenos Cortado","Moreno"],
+  ["Medios Morenos","Moreno"],["Medios Morenos Cortado","Moreno"],
+  ["Moldes Moreno","Moreno"],
+  ["Kilos Int.","Integral"],["Kilos Int. Cortado","Integral"],
+  ["Medios Int.","Integral"],["Medios Int. Cortado","Integral"],
+  ["Cuartos Int.","Integral"],["Cuartos Int. Cortado","Integral"],
+  ["Medias Barritas Int.","Integral"],["Bollos Int.","Integral"],
+  ["Minis Int.","Integral"],["Minis Blando Int.","Integral"],
+  ["Molletes Integrales","Integral"],["Terraza Int.","Integral"],
+  ["Montaditos Integrales","Integral"],
+  ["Molde Integral","Integral"],["Medio Integral Largo","Integral"],["Cuarto Integral Largo","Integral"],
+  ["Telera 2 Kilos Multicereal","Multicereal"],["Kilos Multicereal","Multicereal"],
+  ["Medios Multicereal","Multicereal"]
+];
+
+function isConfigured(){ return API_URL && API_URL.indexOf('PON_AQUI') === -1; }
+
+async function getVal(key){
+  if(!isConfigured()) return null;
+  try{
+    const res = await fetch(`${API_URL}?action=kvGet&key=${encodeURIComponent(key)}`);
+    const data = await res.json();
+    return (data && data.value !== undefined) ? data.value : null;
+  }catch(e){ console.error('getVal error', key, e); return null; }
+}
+async function setVal(key, val){
+  if(!isConfigured()) return false;
+  try{
+    const body = typeof val==='string' ? val : JSON.stringify(val);
+    await fetch(API_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({action:'kvSet', key, value: body}) });
+    return true;
+  }catch(e){ console.error('setVal error', key, e); return false; }
+}
+async function delVal(key){
+  if(!isConfigured()) return false;
+  try{
+    await fetch(API_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({action:'kvDelete', key}) });
+    return true;
+  }catch(e){ return false; }
+}
+async function listKeys(prefix){
+  if(!isConfigured()) return [];
+  try{
+    const res = await fetch(`${API_URL}?action=kvList&prefix=${encodeURIComponent(prefix)}`);
+    const data = await res.json();
+    return data.keys || [];
+  }catch(e){ return []; }
+}
+async function postToSheets(payload){
+  if(!isConfigured()) return;
+  try{
+    await fetch(API_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(payload) });
+  }catch(e){ console.error('sheets sync error', e); }
+}
+
+function slug(name){
+  return (name||'').toString().trim().toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9]+/g,'-').replace(/(^-+|-+$)/g,'') || 'cliente';
+}
+function pad(n){ return n<10 ? '0'+n : ''+n; }
+function todayStr(d){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+function fmtDate(d){ return `${DAY_NAMES[d.getDay()]} ${pad(d.getDate())}/${pad(d.getMonth()+1)}`; }
+
+let App = {
+  isBaker: false,
+  bakerGroup: 'pedidos',
+  bakerSubtab: 'nuevo',
+  products: [],
+  clientDraft: { name: '', qty: {} },
+  bakerDraft: { name: '', qty: {} },
+  fixedWeekDraft: { name: '', days: [], qty: {}, editingKey: null },
+  fixedWeekendDraft: { name: '', qty: {}, editingKey: null },
+  historialClient: null,
+  msg: null
+};
+function buildDefaultCatalog(){
+  return DEFAULT_CATALOG.map((pair,i)=>({id:'p'+i, name:pair[0], category:pair[1]}));
+}
+async function initProducts(){
+  let raw = await getVal(PRODUCTS_KEY);
+  let arr = null;
+  if(raw){ try{ arr = JSON.parse(raw); }catch(e){ arr = null; } }
+  const needsMigration = !arr || arr.length===0 || !arr[0].category;
+  if(needsMigration){
+    arr = buildDefaultCatalog();
+    await setVal(PRODUCTS_KEY, arr);
+  }
+  return arr;
+}
+
+function deliveryLabelFor(now){
+  let d = new Date(now);
+  if(d.getDay()===6){ d.setDate(d.getDate()+2); }
+  else { d.setDate(d.getDate()+1); }
+  return fmtDate(d);
+}
+
+async function checkDailyTasks(){
+  const now = new Date();
+  const hh = now.getHours();
+  const todayKey = todayStr(now);
+  let state = {lastReset:null,lastFixedLoad:null};
+  const raw = await getVal(SYSTEM_KEY);
+  if(raw){ try{ state = JSON.parse(raw); }catch(e){} }
+  let changed = false;
+  if(hh>=8 && state.lastReset!==todayKey && now.getDay()!==6){
+    await resetOrders();
+    state.lastReset = todayKey;
+    changed = true;
+  }
+  if(hh>=16 && state.lastFixedLoad!==todayKey){
+    await loadFixedForToday(now);
+    state.lastFixedLoad = todayKey;
+    changed = true;
+  }
+  if(changed) await setVal(SYSTEM_KEY, state);
+}
+
+async function resetOrders(){
+  const keys = await listKeys(ORDER_PREFIX);
+  for(const key of keys){
+    const raw = await getVal(key);
+    if(!raw) continue;
+    let order;
+    try{ order = JSON.parse(raw); }catch(e){ continue; }
+    const s = slug(order.clientName);
+    const ts = order.createdAt ? Date.parse(order.createdAt) : Date.now();
+    await setVal(`${HISTORY_PREFIX}${s}:${ts}`, order);
+    await delVal(key);
+  }
+  await postToSheets({ action:'reset' });
+}
+
+async function loadFixedForToday(now){
+  const day = now.getDay();
+  const todayKey = todayStr(now);
+  if(day>=1 && day<=5){
+    const dayName = WEEK_DAYS[day-1];
+    const keys = await listKeys(FIXEDWEEK_PREFIX);
+    for(const key of keys){
+      const raw = await getVal(key);
+      if(!raw) continue;
+      let fx; try{ fx = JSON.parse(raw); }catch(e){ continue; }
+      if(fx.days && fx.days.includes(dayName)){
+        const s = slug(fx.name);
+        const orderKey = `${ORDER_PREFIX}fx-${s}-${todayKey}`;
+        const exists = await getVal(orderKey);
+        if(!exists){
+          const newOrder = { clientName: fx.name, items: fx.items, createdAt: now.toISOString(), type:'fijo-semana' };
+          await setVal(orderKey, newOrder);
+          await postToSheets({ action:'order', clientName: newOrder.clientName, items: newOrder.items, createdAt: newOrder.createdAt, orderType: newOrder.type, catalog: App.products.map(p=>({name:p.name,category:p.category})) });
+        }
+      }
+    }
+  }
+  if(day===5){
+    const keys = await listKeys(FIXEDWEEKEND_PREFIX);
+    for(const key of keys){
+      const raw = await getVal(key);
+      if(!raw) continue;
+      let fx; try{ fx = JSON.parse(raw); }catch(e){ continue; }
+      const s = slug(fx.name);
+      const orderKey = `${ORDER_PREFIX}fxwe-${s}-${todayKey}`;
+      const exists = await getVal(orderKey);
+      if(!exists){
+        const newOrder = { clientName: fx.name, items: fx.items, createdAt: now.toISOString(), type:'fijo-sabado' };
+        await setVal(orderKey, newOrder);
+        await postToSheets({ action:'order', clientName: newOrder.clientName, items: newOrder.items, createdAt: newOrder.createdAt, orderType: newOrder.type, catalog: App.products.map(p=>({name:p.name,category:p.category})) });
+      }
+    }
+  }
+}
+
+async function boot(){
+  if(!isConfigured()){
+    render();
+    return;
+  }
+  App.products = await initProducts();
+  await checkDailyTasks();
+  if(location.hash === '#panadero' && !App.isBaker){
+    const pin = prompt("PIN del panadero:");
+    if(pin === PIN){ App.isBaker = true; }
+    else { location.hash=''; }
+  }
+  render();
+  setInterval(async ()=>{ await checkDailyTasks(); if(App.isBaker) render(); }, 60000);
+}
+
+function setMsg(type, text){ App.msg = {type, text}; render(); setTimeout(()=>{ App.msg=null; render(); }, 3500); }
+
+function render(){
+  document.getElementById('headerTitle').textContent = App.isBaker ? 'Panel del Panadero' : 'Panadería';
+  document.getElementById('headerSub').textContent = App.isBaker ? 'Gestión de pedidos' : 'Haz tu pedido';
+  const el = document.getElementById('app');
+  el.innerHTML = '';
+
+  if(!isConfigured()){
+    const warn = document.createElement('div');
+    warn.className = 'config-warning';
+    warn.innerHTML = '<b>Falta configurar la conexión.</b><br>Edita el archivo index.html y sustituye la constante API_URL por la URL de tu Google Apps Script (variable al principio del &lt;script&gt;).';
+    el.appendChild(warn);
+    return;
+  }
+
+  if(App.msg){
+    const m = document.createElement('div');
+    m.className = 'msg ' + (App.msg.type==='ok'?'ok':'err');
+    m.textContent = App.msg.text;
+    el.appendChild(m);
+  }
+  if(!App.isBaker){
+    el.appendChild(renderClientView());
+  } else {
+    el.appendChild(renderBakerTopBar());
+    const sub = renderBakerSubtabs();
+    if(sub) el.appendChild(sub);
+    const settingsRow = document.createElement('div');
+    settingsRow.style.textAlign='right';
+    settingsRow.style.marginBottom='10px';
+    const settings = document.createElement('span');
+    settings.className = 'settings-link';
+    settings.textContent = 'Gestionar productos';
+    settings.onclick = ()=>{ App.bakerGroup='productos'; App.bakerSubtab=null; render(); };
+    settingsRow.appendChild(settings);
+    el.appendChild(settingsRow);
+    el.appendChild(renderBakerContent());
+  }
+  const foot = document.createElement('div');
+  foot.className = 'footer-link';
+  foot.innerHTML = App.isBaker
+    ? '<span onclick="exitBaker()" style="text-decoration:underline;cursor:pointer;">Salir del modo panadero</span>'
+    : '<span onclick="location.hash=\'#panadero\';location.reload();" style="cursor:pointer;">Acceso panadero</span>';
+  el.appendChild(foot);
+}
+function exitBaker(){ App.isBaker=false; location.hash=''; render(); }
+
+function buildCatalogCard(draft, onSubmitLabel, onSubmit, showName=true){
+  const card = document.createElement('div');
+  card.className = 'card';
+  if(showName){
+    const label = document.createElement('span');
+    label.className = 'label'; label.textContent = 'Nombre del cliente';
+    card.appendChild(label);
+    const input = document.createElement('input');
+    input.type = 'text'; input.placeholder = 'Escribe tu nombre';
+    input.value = draft.name;
+    input.oninput = (e)=>{ draft.name = e.target.value; };
+    card.appendChild(input);
+    const note = document.createElement('div'); note.className='small-note';
+    note.textContent = 'Pulsa − + o escribe directamente el número.';
+    card.appendChild(note);
+  }
+  card.appendChild(renderCategorizedFields(draft));
+  const btnWrap = document.createElement('div'); btnWrap.style.marginTop='14px';
+  const btn = document.createElement('button');
+  btn.className='btn btn-block'; btn.textContent = onSubmitLabel;
+  btn.onclick = onSubmit;
+  btnWrap.appendChild(btn);
+  card.appendChild(btnWrap);
+  return card;
+}
+
+function renderCategorizedFields(draft){
+  const frag = document.createDocumentFragment();
+  const byCat = {};
+  App.products.forEach(p=>{
+    const cat = p.category || 'Otros';
+    if(!byCat[cat]) byCat[cat] = [];
+    byCat[cat].push(p);
+  });
+  const cats = CATEGORY_ORDER.filter(c=>byCat[c]).concat(Object.keys(byCat).filter(c=>!CATEGORY_ORDER.includes(c)));
+  cats.forEach(cat=>{
+    const header = document.createElement('div');
+    header.className = 'cat-header';
+    header.style.background = CATEGORY_COLORS[cat] || '#7a7a7a';
+    header.textContent = cat.toUpperCase();
+    frag.appendChild(header);
+    const grid = document.createElement('div');
+    grid.className = 'cat-grid';
+    byCat[cat].forEach(p=>{
+      const cell = document.createElement('div');
+      cell.className = 'cat-cell';
+      const nameDiv = document.createElement('div');
+      nameDiv.className = 'cname'; nameDiv.textContent = p.name;
+      const controls = document.createElement('div');
+      controls.className = 'qty-controls';
+      const minus = document.createElement('button');
+      minus.className='qty-btn'; minus.textContent='−';
+      minus.onclick = ()=>{ const v=(draft.qty[p.name]||0); draft.qty[p.name]=Math.max(0,v-1); render(); };
+      const inp = document.createElement('input');
+      inp.className='qty-input'; inp.type='number'; inp.min='0';
+      inp.value = draft.qty[p.name]||0;
+      inp.oninput = (e)=>{ let v=parseInt(e.target.value); if(isNaN(v)||v<0)v=0; draft.qty[p.name]=v; };
+      const plus = document.createElement('button');
+      plus.className='qty-btn'; plus.textContent='+';
+      plus.onclick = ()=>{ const v=(draft.qty[p.name]||0); draft.qty[p.name]=v+1; render(); };
+      controls.appendChild(minus); controls.appendChild(inp); controls.appendChild(plus);
+      cell.appendChild(nameDiv); cell.appendChild(controls);
+      grid.appendChild(cell);
+    });
+    frag.appendChild(grid);
+  });
+  return frag;
+}
+
+function renderClientView(){
+  const wrap = document.createElement('div');
+  const now = new Date();
+  const infoCard = document.createElement('div');
+  infoCard.className = 'card';
+  infoCard.innerHTML = `<div class="label">Pedido para</div><div style="font-size:1.05rem;font-weight:600;color:var(--accent-dark);">${deliveryLabelFor(now)}</div>`;
+  wrap.appendChild(infoCard);
+  wrap.appendChild(buildCatalogCard(App.clientDraft, "Enviar pedido", async ()=>{
+    const name = App.clientDraft.name.trim();
+    if(!name){ setMsg('err','Escribe tu nombre antes de enviar.'); return; }
+    const items = Object.entries(App.clientDraft.qty).filter(([k,v])=>v>0).map(([name,qty])=>({name,qty}));
+    if(items.length===0){ setMsg('err','Selecciona al menos un producto.'); return; }
+    const id = `${ORDER_PREFIX}${slug(name)}-${Date.now()}`;
+    const orderData = { clientName:name, items, createdAt:new Date().toISOString(), type:'normal' };
+    const ok = await setVal(id, orderData);
+    if(ok){
+      postToSheets({ action:'order', clientName: orderData.clientName, items: orderData.items, createdAt: orderData.createdAt, orderType: orderData.type, catalog: App.products.map(p=>({name:p.name,category:p.category})) });
+      App.clientDraft = { name:'', qty:{} };
+      setMsg('ok','¡Pedido enviado correctamente!');
+    } else {
+      setMsg('err','No se pudo enviar el pedido, inténtalo de nuevo.');
+    }
+  }));
+  return wrap;
+}
+const GROUPS = [
+  {id:'pedidos', label:'Pedidos', subtabs:[
+    {id:'nuevo', label:'Nuevo pedido'},
+    {id:'hoy', label:'Pedidos de hoy'},
+    {id:'total', label:'Total'}
+  ]},
+  {id:'fijos', label:'Clientes Fijos', subtabs:[
+    {id:'semana', label:'Fijos semana'},
+    {id:'sabado', label:'Fijos sábado'}
+  ]},
+  {id:'historial', label:'Historial', subtabs:null}
+];
+
+function renderBakerTopBar(){
+  const bar = document.createElement('div');
+  bar.className = 'topbar';
+  GROUPS.forEach(g=>{
+    const b = document.createElement('button');
+    b.className = 'topbar-btn' + (App.bakerGroup===g.id?' active':'');
+    b.textContent = g.label;
+    b.onclick = ()=>{
+      App.bakerGroup = g.id;
+      App.bakerSubtab = g.subtabs ? g.subtabs[0].id : null;
+      App.historialClient = null;
+      render();
+    };
+    bar.appendChild(b);
+  });
+  return bar;
+}
+
+function renderBakerSubtabs(){
+  const group = GROUPS.find(g=>g.id===App.bakerGroup);
+  if(!group || !group.subtabs) return null;
+  const bar = document.createElement('div');
+  bar.className = 'subtabs';
+  group.subtabs.forEach(st=>{
+    const b = document.createElement('button');
+    b.className = 'subtab-btn' + (App.bakerSubtab===st.id?' active':'');
+    b.textContent = st.label;
+    b.onclick = ()=>{ App.bakerSubtab = st.id; render(); };
+    bar.appendChild(b);
+  });
+  return bar;
+}
+
+function renderBakerContent(){
+  const wrap = document.createElement('div');
+  if(App.bakerGroup==='pedidos'){
+    if(App.bakerSubtab==='nuevo') wrap.appendChild(renderBakerPedido());
+    else if(App.bakerSubtab==='hoy') wrap.appendChild(renderHoy());
+    else if(App.bakerSubtab==='total') wrap.appendChild(renderTotal());
+  } else if(App.bakerGroup==='fijos'){
+    if(App.bakerSubtab==='semana') wrap.appendChild(renderFijoSemana());
+    else if(App.bakerSubtab==='sabado') wrap.appendChild(renderFijoSabado());
+  } else if(App.bakerGroup==='historial'){
+    wrap.appendChild(renderHistorial());
+  } else if(App.bakerGroup==='productos'){
+    wrap.appendChild(renderProductos());
+  }
+  return wrap;
+}
+
+function renderBakerPedido(){
+  return buildCatalogCard(App.bakerDraft, "Guardar pedido", async ()=>{
+    const name = App.bakerDraft.name.trim();
+    if(!name){ setMsg('err','Escribe el nombre del cliente.'); return; }
+    const items = Object.entries(App.bakerDraft.qty).filter(([k,v])=>v>0).map(([name,qty])=>({name,qty}));
+    if(items.length===0){ setMsg('err','Selecciona al menos un producto.'); return; }
+    const id = `${ORDER_PREFIX}${slug(name)}-${Date.now()}`;
+    const orderData = { clientName:name, items, createdAt:new Date().toISOString(), type:'normal' };
+    await setVal(id, orderData);
+    postToSheets({ action:'order', clientName: orderData.clientName, items: orderData.items, createdAt: orderData.createdAt, orderType: orderData.type, catalog: App.products.map(p=>({name:p.name,category:p.category})) });
+    App.bakerDraft = { name:'', qty:{} };
+    setMsg('ok','Pedido guardado.');
+  });
+}
+
+async function loadHoy(){
+  const keys = await listKeys(ORDER_PREFIX);
+  const orders = [];
+  for(const k of keys){
+    const raw = await getVal(k);
+    if(!raw) continue;
+    try{ orders.push({key:k, ...JSON.parse(raw)}); }catch(e){}
+  }
+  orders.sort((a,b)=> new Date(a.createdAt) - new Date(b.createdAt));
+  return orders;
+}
+function renderHoy(){
+  const card = document.createElement('div'); card.className='card';
+  card.innerHTML = '<h2 class="section-title">Pedidos activos (sin resetear)</h2><div id="hoyList" class="loading-dot">Cargando...</div>';
+  loadHoy().then(orders=>{
+    const list = card.querySelector('#hoyList');
+    if(orders.length===0){ list.innerHTML = '<div class="small-note">No hay pedidos todavía.</div>'; return; }
+    list.innerHTML = '';
+    orders.forEach(o=>{
+      const div = document.createElement('div');
+      div.style.marginBottom='10px'; div.style.paddingBottom='10px'; div.style.borderBottom='1px solid #f0e6d6';
+      const typeBadge = o.type==='fijo-semana' ? '<span class="badge">fijo</span>' : (o.type==='fijo-sabado' ? '<span class="badge">fijo sáb.</span>' : '');
+      div.innerHTML = `<b>${o.clientName}</b>${typeBadge}<div class="order-line">${o.items.map(i=>`${i.qty}× ${i.name}`).join(', ')}</div>`;
+      const delBtn = document.createElement('button');
+      delBtn.className='btn small danger'; delBtn.textContent='Eliminar'; delBtn.style.marginTop='6px';
+      delBtn.onclick = async ()=>{ if(confirm('¿Eliminar este pedido?')){ await delVal(o.key); render(); } };
+      div.appendChild(delBtn);
+      list.appendChild(div);
+    });
+  });
+  return card;
+}
+
+function renderTotal(){
+  const card = document.createElement('div'); card.className='card';
+  card.innerHTML = '<h2 class="section-title">Total de productos (pedidos activos)</h2><div id="totalList" class="loading-dot">Cargando...</div>';
+  loadHoy().then(orders=>{
+    const totals = {};
+    orders.forEach(o=> o.items.forEach(i=>{ totals[i.name]=(totals[i.name]||0)+Number(i.qty); }));
+    const list = card.querySelector('#totalList');
+    const names = Object.keys(totals);
+    if(names.length===0){ list.innerHTML = '<div class="small-note">No hay pedidos todavía.</div>'; return; }
+    list.innerHTML = '';
+    names.sort().forEach(n=>{
+      const row = document.createElement('div'); row.className='total-row';
+      row.innerHTML = `<span>${n}</span><b>${totals[n]}</b>`;
+      list.appendChild(row);
+    });
+  });
+  return card;
+}
+
+function renderFijoSemana(){
+  const wrap = document.createElement('div');
+  const card = document.createElement('div'); card.className='card';
+  card.innerHTML = '<h2 class="section-title">Nuevo pedido fijo (Lunes a Viernes)</h2><span class="label">Nombre del cliente</span>';
+  const input = document.createElement('input'); input.type='text';
+  input.value = App.fixedWeekDraft.name;
+  input.oninput = (e)=>{ App.fixedWeekDraft.name = e.target.value; };
+  card.appendChild(input);
+  const daysWrap = document.createElement('div'); daysWrap.className='days-select';
+  WEEK_DAYS.forEach(d=>{
+    const chip = document.createElement('div');
+    chip.className = 'day-chip' + (App.fixedWeekDraft.days.includes(d)?' sel':'');
+    chip.textContent = d;
+    chip.onclick = ()=>{
+      const i = App.fixedWeekDraft.days.indexOf(d);
+      if(i>-1) App.fixedWeekDraft.days.splice(i,1); else App.fixedWeekDraft.days.push(d);
+      render();
+    };
+    daysWrap.appendChild(chip);
+  });
+  card.appendChild(daysWrap);
+  const note = document.createElement('div'); note.className='small-note';
+  note.textContent = 'Se cargará automáticamente cada uno de los días marcados, sobre las 16:00 (4 de la tarde), y se borrará al día siguiente a las 8:00.';
+  card.appendChild(note);
+  card.appendChild(renderCategorizedFields(App.fixedWeekDraft));
+  const btnWrap = document.createElement('div'); btnWrap.style.marginTop='14px'; btnWrap.className='flexrow';
+  const saveBtn = document.createElement('button'); saveBtn.className='btn'; saveBtn.textContent = App.fixedWeekDraft.editingKey ? 'Guardar cambios' : 'Crear fijo';
+  saveBtn.onclick = async ()=>{
+    const name = App.fixedWeekDraft.name.trim();
+    if(!name){ setMsg('err','Escribe el nombre del cliente.'); return; }
+    if(App.fixedWeekDraft.days.length===0){ setMsg('err','Selecciona al menos un día.'); return; }
+    const items = Object.entries(App.fixedWeekDraft.qty).filter(([k,v])=>v>0).map(([name,qty])=>({name,qty}));
+    if(items.length===0){ setMsg('err','Selecciona al menos un producto.'); return; }
+    const key = App.fixedWeekDraft.editingKey || `${FIXEDWEEK_PREFIX}${slug(name)}`;
+    await setVal(key, { name, days: App.fixedWeekDraft.days, items });
+    App.fixedWeekDraft = { name:'', days:[], qty:{}, editingKey:null };
+    setMsg('ok','Pedido fijo guardado.');
+  };
+  if(App.fixedWeekDraft.editingKey){
+    const cancelBtn = document.createElement('button'); cancelBtn.className='btn secondary'; cancelBtn.textContent='Cancelar';
+    cancelBtn.onclick = ()=>{ App.fixedWeekDraft={name:'',days:[],qty:{},editingKey:null}; render(); };
+    btnWrap.appendChild(cancelBtn);
+  }
+  btnWrap.appendChild(saveBtn);
+  card.appendChild(btnWrap);
+  wrap.appendChild(card);
+  const listCard = document.createElement('div'); listCard.className='card';
+  listCard.innerHTML = '<h2 class="section-title">Pedidos fijos existentes (editar / eliminar)</h2><div id="fwList" class="loading-dot">Cargando...</div>';
+  wrap.appendChild(listCard);
+  (async ()=>{
+    const keys = await listKeys(FIXEDWEEK_PREFIX);
+    const list = listCard.querySelector('#fwList');
+    if(keys.length===0){ list.innerHTML='<div class="small-note">No hay pedidos fijos todavía.</div>'; return; }
+    list.innerHTML='';
+    for(const key of keys){
+      const raw = await getVal(key);
+      if(!raw) continue;
+      let fx; try{ fx = JSON.parse(raw); }catch(e){ continue; }
+      const div = document.createElement('div');
+      div.style.marginBottom='10px'; div.style.paddingBottom='10px'; div.style.borderBottom='1px solid #f0e6d6';
+      div.innerHTML = `<b>${fx.name}</b> ${fx.days.map(d=>`<span class="chip">${d}</span>`).join('')}<div class="order-line">${fx.items.map(i=>`${i.qty}× ${i.name}`).join(', ')}</div>`;
+      const editBtn = document.createElement('button'); editBtn.className='btn small secondary'; editBtn.textContent='Editar'; editBtn.style.marginRight='6px';
+      editBtn.onclick = ()=>{
+        const qty = {}; fx.items.forEach(i=>qty[i.name]=i.qty);
+        App.fixedWeekDraft = { name: fx.name, days: [...fx.days], qty, editingKey: key };
+        window.scrollTo(0,0); render();
+      };
+      const delBtn = document.createElement('button'); delBtn.className='btn small danger'; delBtn.textContent='Eliminar';
+      delBtn.onclick = async ()=>{ if(confirm('¿Eliminar este pedido fijo?')){ await delVal(key); render(); } };
+      div.appendChild(editBtn); div.appendChild(delBtn);
+      list.appendChild(div);
+    }
+  })();
+  return wrap;
+}
+
+function renderFijoSabado(){
+  const wrap = document.createElement('div');
+  const card = document.createElement('div'); card.className='card';
+  card.innerHTML = '<h2 class="section-title">Nuevo pedido fijo de sábado</h2><span class="label">Nombre del cliente</span>';
+  const input = document.createElement('input'); input.type='text';
+  input.value = App.fixedWeekendDraft.name;
+  input.oninput = (e)=>{ App.fixedWeekendDraft.name = e.target.value; };
+  card.appendChild(input);
+  const note = document.createElement('div'); note.className='small-note';
+  note.textContent = 'Se cargará automáticamente cada viernes sobre las 16:00 (pedido para el sábado) y permanecerá activo todo el sábado. Se borrará el domingo a las 8:00 y no volverá a cargarse hasta el viernes siguiente.';
+  card.appendChild(note);
+  card.appendChild(renderCategorizedFields(App.fixedWeekendDraft));
+  const btnWrap = document.createElement('div'); btnWrap.style.marginTop='14px'; btnWrap.className='flexrow';
+  const saveBtn = document.createElement('button'); saveBtn.className='btn'; saveBtn.textContent = App.fixedWeekendDraft.editingKey ? 'Guardar cambios' : 'Crear fijo';
+  saveBtn.onclick = async ()=>{
+    const name = App.fixedWeekendDraft.name.trim();
+    if(!name){ setMsg('err','Escribe el nombre del cliente.'); return; }
+    const items = Object.entries(App.fixedWeekendDraft.qty).filter(([k,v])=>v>0).map(([name,qty])=>({name,qty}));
+    if(items.length===0){ setMsg('err','Selecciona al menos un producto.'); return; }
+    const key = App.fixedWeekendDraft.editingKey || `${FIXEDWEEKEND_PREFIX}${slug(name)}`;
+    await setVal(key, { name, items });
+    App.fixedWeekendDraft = { name:'', qty:{}, editingKey:null };
+    setMsg('ok','Pedido fijo de sábado guardado.');
+  };
+  if(App.fixedWeekendDraft.editingKey){
+    const cancelBtn = document.createElement('button'); cancelBtn.className='btn secondary'; cancelBtn.textContent='Cancelar';
+    cancelBtn.onclick = ()=>{ App.fixedWeekendDraft={name:'',qty:{},editingKey:null}; render(); };
+    btnWrap.appendChild(cancelBtn);
+  }
+  btnWrap.appendChild(saveBtn);
+  card.appendChild(btnWrap);
+  wrap.appendChild(card);
+  const listCard = document.createElement('div'); listCard.className='card';
+  listCard.innerHTML = '<h2 class="section-title">Pedidos fijos de sábado existentes (editar / eliminar)</h2><div id="fweList" class="loading-dot">Cargando...</div>';
+  wrap.appendChild(listCard);
+  (async ()=>{
+    const keys = await listKeys(FIXEDWEEKEND_PREFIX);
+    const list = listCard.querySelector('#fweList');
+    if(keys.length===0){ list.innerHTML='<div class="small-note">No hay pedidos fijos todavía.</div>'; return; }
+    list.innerHTML='';
+    for(const key of keys){
+      const raw = await getVal(key);
+      if(!raw) continue;
+      let fx; try{ fx = JSON.parse(raw); }catch(e){ continue; }
+      const div = document.createElement('div');
+      div.style.marginBottom='10px'; div.style.paddingBottom='10px'; div.style.borderBottom='1px solid #f0e6d6';
+      div.innerHTML = `<b>${fx.name}</b><div class="order-line">${fx.items.map(i=>`${i.qty}× ${i.name}`).join(', ')}</div>`;
+      const editBtn = document.createElement('button'); editBtn.className='btn small secondary'; editBtn.textContent='Editar'; editBtn.style.marginRight='6px';
+      editBtn.onclick = ()=>{
+        const qty = {}; fx.items.forEach(i=>qty[i.name]=i.qty);
+        App.fixedWeekendDraft = { name: fx.name, qty, editingKey: key };
+        window.scrollTo(0,0); render();
+      };
+      const delBtn = document.createElement('button'); delBtn.className='btn small danger'; delBtn.textContent='Eliminar';
+      delBtn.onclick = async ()=>{ if(confirm('¿Eliminar este pedido fijo?')){ await delVal(key); render(); } };
+      div.appendChild(editBtn); div.appendChild(delBtn);
+      list.appendChild(div);
+    }
+  })();
+  return wrap;
+}
+
+function renderHistorial(){
+  const wrap = document.createElement('div');
+  if(App.historialClient){
+    const card = document.createElement('div'); card.className='card';
+    card.innerHTML = `<h2 class="section-title">Historial de ${App.historialClient.name}</h2><div id="histOrders" class="loading-dot">Cargando...</div>`;
+    const backBtn = document.createElement('button'); backBtn.className='btn secondary small'; backBtn.textContent='← Volver a clientes';
+    backBtn.onclick = ()=>{ App.historialClient=null; render(); };
+    wrap.appendChild(backBtn);
+    wrap.appendChild(card);
+    (async ()=>{
+      const keys = await listKeys(`${HISTORY_PREFIX}${App.historialClient.slug}:`);
+      const orders = [];
+      for(const k of keys){
+        const raw = await getVal(k);
+        if(!raw) continue;
+        try{ orders.push(JSON.parse(raw)); }catch(e){}
+      }
+      orders.sort((a,b)=> new Date(a.createdAt) - new Date(b.createdAt));
+      const list = card.querySelector('#histOrders');
+      if(orders.length===0){ list.innerHTML='<div class="small-note">Sin pedidos registrados.</div>'; return; }
+      list.innerHTML='';
+      orders.forEach(o=>{
+        const div = document.createElement('div');
+        div.style.marginBottom='8px'; div.style.paddingBottom='8px'; div.style.borderBottom='1px solid #f0e6d6';
+        const d = new Date(o.createdAt);
+        const typeBadge = o.type==='fijo-semana' ? '<span class="badge">fijo</span>' : (o.type==='fijo-sabado' ? '<span class="badge">fijo sáb.</span>' : '');
+        div.innerHTML = `<b>${fmtDate(d)} ${pad(d.getHours())}:${pad(d.getMinutes())}</b>${typeBadge}<div class="order-line">${o.items.map(i=>`${i.qty}× ${i.name}`).join(', ')}</div>`;
+        list.appendChild(div);
+      });
+    })();
+    return wrap;
+  }
+  const card = document.createElement('div'); card.className='card';
+  card.innerHTML = '<h2 class="section-title">Clientes</h2><div id="clientList" class="loading-dot">Cargando...</div>';
+  wrap.appendChild(card);
+  (async ()=>{
+    const keys = await listKeys(HISTORY_PREFIX);
+    const seen = {};
+    keys.forEach(k=>{
+      const parts = k.split(':');
+      const s = parts[1];
+      if(s) seen[s] = true;
+    });
+    const list = card.querySelector('#clientList');
+    const slugs = Object.keys(seen);
+    if(slugs.length===0){ list.innerHTML = '<div class="small-note">Todavía no hay historial.</div>'; return; }
+    list.innerHTML='';
+    for(const s of slugs){
+      const sampleKeys = await listKeys(`${HISTORY_PREFIX}${s}:`);
+      let displayName = s;
+      if(sampleKeys.length>0){
+        const raw = await getVal(sampleKeys[0]);
+        if(raw){ try{ displayName = JSON.parse(raw).clientName || s; }catch(e){} }
+      }
+      const div = document.createElement('div'); div.className='client-item';
+      div.textContent = displayName;
+      div.onclick = ()=>{ App.historialClient = {slug:s, name:displayName}; render(); };
+      list.appendChild(div);
+    }
+  })();
+  return wrap;
+}
+
+function renderProductos(){
+  const wrap = document.createElement('div');
+  const addCard = document.createElement('div'); addCard.className='card';
+  addCard.innerHTML = '<h2 class="section-title">Añadir producto</h2>';
+  const input = document.createElement('input'); input.type='text'; input.placeholder='Nombre del producto';
+  input.style.marginBottom='8px';
+  addCard.appendChild(input);
+  const select = document.createElement('select');
+  select.style.width='100%'; select.style.padding='10px'; select.style.borderRadius='8px'; select.style.border='1px solid #ddd';
+  CATEGORY_ORDER.forEach(c=>{ const opt=document.createElement('option'); opt.value=c; opt.textContent=c; select.appendChild(opt); });
+  addCard.appendChild(select);
+  const btnWrap = document.createElement('div'); btnWrap.style.marginTop='10px';
+  const addBtn = document.createElement('button'); addBtn.className='btn'; addBtn.textContent='Añadir';
+  addBtn.onclick = async ()=>{
+    const name = input.value.trim();
+    if(!name){ return; }
+    const newP = { id:'p'+Date.now(), name, category: select.value };
+    const updated = [...App.products, newP];
+    await setVal(PRODUCTS_KEY, updated);
+    App.products = updated;
+    setMsg('ok','Producto añadido.');
+  };
+  btnWrap.appendChild(addBtn); addCard.appendChild(btnWrap);
+  wrap.appendChild(addCard);
+  const listCard = document.createElement('div'); listCard.className='card';
+  listCard.innerHTML = '<h2 class="section-title">Catálogo actual</h2>';
+  const byCat = {};
+  App.products.forEach(p=>{ const c=p.category||'Otros'; if(!byCat[c])byCat[c]=[]; byCat[c].push(p); });
+  const cats = CATEGORY_ORDER.filter(c=>byCat[c]).concat(Object.keys(byCat).filter(c=>!CATEGORY_ORDER.includes(c)));
+  cats.forEach(cat=>{
+    const h = document.createElement('div');
+    h.style.fontWeight='700'; h.style.fontSize='.85rem'; h.style.margin='10px 0 4px'; h.style.color=CATEGORY_COLORS[cat]||'#555';
+    h.textContent = cat;
+    listCard.appendChild(h);
+    byCat[cat].forEach(p=>{
+      const row = document.createElement('div');
+      row.style.display='flex'; row.style.justifyContent='space-between'; row.style.alignItems='center';
+      row.style.padding='7px 0'; row.style.borderBottom='1px solid #f0e6d6';
+      const name = document.createElement('div'); name.style.fontSize='.9rem'; name.textContent=p.name;
+      const delBtn = document.createElement('button'); delBtn.className='btn small danger'; delBtn.textContent='Eliminar';
+      delBtn.onclick = async ()=>{
+        if(!confirm('¿Eliminar este producto del catálogo?')) return;
+        const updated = App.products.filter(x=>x.id!==p.id);
+        await setVal(PRODUCTS_KEY, updated);
+        App.products = updated;
+        render();
+      };
+      row.appendChild(name); row.appendChild(delBtn);
+      listCard.appendChild(row);
+    });
+  });
+  wrap.appendChild(listCard);
+  return wrap;
+}
+
+boot();
+</script>
+</body>
+</html>
