@@ -141,17 +141,19 @@ async function setVal(key, val){
   if(!isConfigured()) return false;
   try{
     const body = typeof val==='string' ? val : JSON.stringify(val);
-    await fetch(API_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({action:'kvSet', key, value: body}) });
+    await fetch(`${API_URL}?action=kvSet&key=${encodeURIComponent(key)}&value=${encodeURIComponent(body)}`);
     return true;
   }catch(e){ console.error('setVal error', key, e); return false; }
 }
+
 async function delVal(key){
   if(!isConfigured()) return false;
   try{
-    await fetch(API_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({action:'kvDelete', key}) });
+    await fetch(`${API_URL}?action=kvDelete&key=${encodeURIComponent(key)}`);
     return true;
   }catch(e){ return false; }
 }
+
 async function listKeys(prefix){
   if(!isConfigured()) return [];
   try{
@@ -163,9 +165,10 @@ async function listKeys(prefix){
 async function postToSheets(payload){
   if(!isConfigured()) return;
   try{
-    await fetch(API_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(payload) });
+    await fetch(`${API_URL}?action=sheetSync&payload=${encodeURIComponent(JSON.stringify(payload))}`);
   }catch(e){ console.error('sheets sync error', e); }
 }
+
 
 function slug(name){
   return (name||'').toString().trim().toLowerCase()
