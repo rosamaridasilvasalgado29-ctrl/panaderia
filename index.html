@@ -136,14 +136,16 @@ async function getVal(key){
     const data = await res.json();
     return (data && data.value !== undefined) ? data.value : null;
   }catch(e){ console.error('getVal error', key, e); return null; }
-}
+}}catch(e){ console.error('setVal error', key, e); alert('DEBUG: '+e.message); return false; }
+
 async function setVal(key, val){
   if(!isConfigured()) return false;
   try{
     const body = typeof val==='string' ? val : JSON.stringify(val);
     await fetch(`${API_URL}?action=kvSet&key=${encodeURIComponent(key)}&value=${encodeURIComponent(body)}`);
     return true;
-  }catch(e){ console.error('setVal error', key, e); return false; }
+  }catch(e){ console.error('setVal error', key, e); alert('DEBUG: '+e.message); return false; }
+
 }
 
 async function delVal(key){
