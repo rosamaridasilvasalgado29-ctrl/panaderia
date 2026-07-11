@@ -136,18 +136,15 @@ async function getVal(key){
     const data = await res.json();
     return (data && data.value !== undefined) ? data.value : null;
   }catch(e){ console.error('getVal error', key, e); return null; }
-}}catch(e){ console.error('setVal error', key, e); alert('DEBUG: '+e.message); return false; }
-
+}
 async function setVal(key, val){
   if(!isConfigured()) return false;
   try{
     const body = typeof val==='string' ? val : JSON.stringify(val);
     await fetch(`${API_URL}?action=kvSet&key=${encodeURIComponent(key)}&value=${encodeURIComponent(body)}`);
     return true;
-  }catch(e){ console.error('setVal error', key, e); alert('DEBUG: '+e.message); return false; }
-
+  }catch(e){ console.error('setVal error', key, e); return false; }
 }
-
 async function delVal(key){
   if(!isConfigured()) return false;
   try{
@@ -155,7 +152,6 @@ async function delVal(key){
     return true;
   }catch(e){ return false; }
 }
-
 async function listKeys(prefix){
   if(!isConfigured()) return [];
   try{
@@ -170,7 +166,6 @@ async function postToSheets(payload){
     await fetch(`${API_URL}?action=sheetSync&payload=${encodeURIComponent(JSON.stringify(payload))}`);
   }catch(e){ console.error('sheets sync error', e); }
 }
-
 
 function slug(name){
   return (name||'').toString().trim().toLowerCase()
@@ -193,6 +188,7 @@ let App = {
   historialClient: null,
   msg: null
 };
+
 function buildDefaultCatalog(){
   return DEFAULT_CATALOG.map((pair,i)=>({id:'p'+i, name:pair[0], category:pair[1]}));
 }
@@ -449,6 +445,7 @@ function renderClientView(){
   }));
   return wrap;
 }
+
 const GROUPS = [
   {id:'pedidos', label:'Pedidos', subtabs:[
     {id:'nuevo', label:'Nuevo pedido'},
@@ -836,6 +833,7 @@ function renderProductos(){
 }
 
 boot();
+window.addEventListener('hashchange', function(){ location.reload(); });
 </script>
 </body>
 </html>
