@@ -143,7 +143,8 @@ async function setVal(key, val){
     const body = typeof val==='string' ? val : JSON.stringify(val);
     await fetch(`${API_URL}?action=kvSet&key=${encodeURIComponent(key)}&value=${encodeURIComponent(body)}`);
     return true;
-  }catch(e){ console.error('setVal error', key, e); return false; }
+}catch(e){ alert('ERROR: '+e.message); return false; }
+
 }
 async function delVal(key){
   if(!isConfigured()) return false;
